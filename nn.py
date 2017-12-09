@@ -193,6 +193,7 @@ def model(X,Y,**kwargs):
 		accu = compute_dev_set(X_dev,Y_dev,m_dev,activation,parameters,dev_accu)
 	snapshot(train_cost,train_accu,dev_accu,parameters,i)
 	log("Model ready with accuracy : {}".format(accu))
+	return parameters
 
 def snapshot(train_cost,train_accu,dev_accu,parameters,i):
 	plt.clf()
