@@ -53,19 +53,14 @@ def update_grads(grads,parameters,alpha):
 
 def back_prop(m,A_values,Z_values,Y,activation,parameters):
 	grads = {}
-	#dAL = - (np.divide(Y, A_values[-1]) - np.divide(1 - Y, 1 - A_values[-1]))
-	#dZ = perform_activation_backwards(dAL,A_values[-1],activation[1])
 	dZ = A_values[-1] - Y
 	L = len(A_values)-1
 	for l in reversed(range(L)):
 		grads['dW' + str(l + 1)] = (1 / m) * np.dot(dZ,A_values[l].T)
 		grads['db' + str(l + 1)] = (1 / m) * np.sum(dZ,axis=1,keepdims=True)
-		#log(" W{} : {}, dZ : {}, A_Values{} :{}".format(str(l+1),np.asarray(parameters['W' + str(l+1)]).shape,np.asarray(dZ).shape,l,np.asarray(A_values[l]).shape))
 		if l != 0:
-			dZ = np.dot(parameters['W' + str(l+1)].T,dZ)# * (1-np.power(A_values[l],2))
+			dZ = np.dot(parameters['W' + str(l+1)].T,dZ)
 			dZ *= perform_activation_backwards(activation[0],Z_values[l-1],A_values[l])
-		#dA_prev = np.dot(parameters['W' + str(l)].T,dZ)
-		# dZ = perform_activation_backwards(  #dint quite understand yet on how the relu inverse is done
 	return grads
 
 def forward_prop(X,activation,parameters):
@@ -78,12 +73,10 @@ def forward_prop(X,activation,parameters):
 		Z = np.dot(parameters['W' + str(l)],A) + parameters['b' + str(l)]
 		A = perform_activation(activation[0],Z)
 		A_values.append(A)
-		#if activation[0] == 'relu': #Only relu requires this as for others we will be able to do with A
 		Z_values.append(Z)
 	Z = np.dot(parameters['W' + str(L)],A) + parameters['b' + str(L)]
 	A = perform_activation(activation[1],Z)
 	A_values.append(A)
-	#if activation[0] == 'relu':
 	Z_values.append(Z)
 	return A_values,Z_values
 
@@ -103,18 +96,15 @@ def predict(m,A2):
 			if A2[j,i] > max_val :
 				max_val_id = j
 				max_val = A2[j,i]
-			#Y[j, i] = 1 if A2[j, i] > 0.5 else 0
 		Y[max_val_id,i] = 1
 	return Y
 
 def get_batch(X,Y,m,X_current_batch,Y_current_batch,batch_size,batch_cursor,epoch):
-	#log("in get_batch with batch size : {} and {} ".format(batch_size,batch_cursor))
 	X_current_batch[:,0:batch_size] = X[:,batch_cursor:batch_cursor+batch_size]
 	Y_current_batch[:,0:batch_size] = Y[:,batch_cursor:batch_cursor+batch_size]
 	if batch_cursor + 2*batch_size >= m:
 		batch_cursor = 0
 		epoch+=1
-		#log("epoch increased : {}".format(epoch))
 	else:
 		batch_cursor += batch_size
 	return X_current_batch,Y_current_batch,batch_cursor,epoch
@@ -127,7 +117,6 @@ def compute_cost(y_hat,Y,m,train_cost,train_accu):
 	accu = validate(Y,Y2,m)
 	train_accu.append(accu)
 	return cost
-	#log("cost : {} - {}, train accu : {}".format(index*50,cost,accu))
 
 def compute_dev_set(X,Y,m,activation,parameters,dev_accu):
 	A_values,Z_values = forward_prop(X,activation,parameters)
@@ -159,7 +148,7 @@ def model(X,Y,**kwargs):
 	iterations_capture_freq = 50
 	capture_frequency = 500
 	accu = 0
-	train_cost = []#np.zeros(int(iter/iterations_capture_freq))
+	train_cost = []
 	train_accu = []
 	dev_accu = []
 	batch_cursor = 0
@@ -187,7 +176,6 @@ def model(X,Y,**kwargs):
 		parameters = update_grads(grads,parameters,alpha)
 		if i%capture_frequency == 0 and i!=0:
 			snapshot(train_cost,train_accu,dev_accu,parameters,i)
-	#plot_cost_graph(train_cost)
 	print("")
 	if m_dev >0:
 		accu = compute_dev_set(X_dev,Y_dev,m_dev,activation,parameters,dev_accu)
@@ -197,9 +185,9 @@ def model(X,Y,**kwargs):
 
 def snapshot(train_cost,train_accu,dev_accu,parameters,i):
 	plt.clf()
-	#dir = os.path.abspath("output/snapshots/"+str(i))
 	dir = os.path.abspath("output/snapshots")
-	os.makedirs(os.path.dirname(dir), exist_ok=True)
+	if not os.path.exists(dir):
+		os.makedirs(dir)
 	np.save(os.path.join(dir, 'parameters'+str(i)),parameters)
 	#cost graph
 	plt.subplot(3,1,1)
@@ -212,25 +200,13 @@ def snapshot(train_cost,train_accu,dev_accu,parameters,i):
 	#train accu
 	plt.subplot(3,1,2)
 	plt.grid(True)
-	#ay = plt.gca()
-	#ay.set_yscale('log')
 	plt.plot(train_accu)
 	plt.title("Training accuracy")
 	
 	#dev accu
 	plt.subplot(3,1,3)
 	plt.grid(True)
-	#ay = plt.gca()
-	#ay.set_yscale('log')
 	plt.plot(dev_accu)
 	plt.title("Dev set accuracy")
 	plt.savefig(dir+"/graph"+str(i)+".png")
 	plt.close()
-
-def plot_cost_graph(values):
-	plt.plot(values)
-	plt.grid(True)
-	ay = plt.gca()
-	ay.set_yscale('log')
-	#plt.ylim([0,2])
-	plt.show()

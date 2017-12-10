@@ -20,9 +20,6 @@ def get_all_data():
 def get_data(file):
 	absFile = os.path.abspath("data/"+file)
 	dict = unpickle(absFile)
-	#for key in dict.keys():
-	#	print(key)
-	#print("Unpacking {}".format(dict[b'batch_label']))
 	X = np.asarray(dict[b'data'].T).astype("uint8")
 	Yraw = np.asarray(dict[b'labels'])
 	Y = np.zeros((10,10000))
@@ -33,18 +30,10 @@ def get_data(file):
 
 def visualize_image(X,Y,names,id):
 	rgb = X[:,id]
-	#print(rgb.shape)
 	img = rgb.reshape(3,32,32).transpose([1, 2, 0])
-	#print(img.shape)
 	plt.imshow(img)
 	plt.title(names[id])
-	#print(Y[id])
-	#plt.show()
 	dir = os.path.abspath("output/samples")
-#	try:
-#		os.makedirs(dir)
-#	except OSError as exception:
-#		if exception.errno != errno.EEXIST:
-#			raise
+	if not os.path.exists(dir):
+		os.makedirs(dir)
 	plt.savefig(dir+"/"+names[id].decode('ascii'))
-	#plt.savefig(dir+"/image.jpg",format='jpg')
